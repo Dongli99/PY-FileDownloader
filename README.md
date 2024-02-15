@@ -1,4 +1,12 @@
-# Files Downloader
+<h1 align='center'> Files Downloader </h1>
+
+<div align='center'>
+
+![Static Badge](https://img.shields.io/badge/-python-yellow?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/-argparse-brown?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/-requests-blue?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/-thread-green?style=for-the-badge)
+</div>
 
 ## Overview
 
