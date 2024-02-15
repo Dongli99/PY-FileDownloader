@@ -1,7 +1,7 @@
 import requests
 from time import perf_counter, sleep
 import argparse
-import threading
+from threading import Thread
 import os   
 # os ONLY ensure images/ exists in your folder.
 
@@ -21,21 +21,35 @@ def elapse_normal():
     # 2. execute download
     for i in range(len(urls)):
         path = f'{IMG_FOLDER}/{i+1}.{FORMAT}'
-        download(urls[i], path)
+        url = urls[i]
+        download(url, path)
     # 3. end timer and calculate elapse
     end = perf_counter()
     elapse = end - start
     print(f'{len(urls)} images downloaded in {elapse} seconds.')
 
 def elapse_concurrent():
-    # start timer
+    # 1. prepare threads
+    threads = [] # create a list for threads
+    for i in range(len(urls)): # add threads to the list
+        path = f'{IMG_FOLDER}/{i+1}.{FORMAT}'
+        url = urls[i]
+        t = Thread(target=download,
+                   args=(url, path))
+        threads.append(t)
+    # 2. start timer
     start = perf_counter()
-    download()
-    # end timer and calculate elapse
+    # 3.. execute threading download
+    for t in threads:
+        t.start() # start threads
+    for t in threads:
+        t.join() # wait for completing
+    # 4. end timer and calculate elapse
     end = perf_counter()
     elapse = end - start
     print(f'All downloaded in {elapse} seconds.')
 
+# variables
 IMG_FOLDER = 'images'
 FORMAT = 'jpg'
 urls = [
@@ -71,4 +85,6 @@ if __name__=='__main__':
     # Ensure folder exists
     if not os.path.exists(IMG_FOLDER):
         os.makedirs(IMG_FOLDER)
+    # Execute elapse functions
     elapse_normal()
+    elapse_concurrent()
