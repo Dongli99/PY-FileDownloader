@@ -4,8 +4,12 @@ from argparse import ArgumentParser
 from threading import Thread
 import os # os ONLY ensure folder/ exists.
 
-class ImgDownloader():
-    
+class FilesDownloader():
+    ## Improvements:
+    # 1. This project has been refactored to use a class-based structure, 
+    #    enhancing maintainability, readability, and extensibility.
+    # 2. The bad response has been handled.
+
     """
     Init Variables
     """
@@ -39,7 +43,7 @@ class ImgDownloader():
         "https://th.bing.com/th/id/OIP.MksSZEmu5Cgly2HNvRp4NQAAAA?w=180&h=163&c=7&r=0&o=5&pid=1.7",
         "https://th.bing.com/th/id/OIP.HCpPn-IRV8SVidBlRoBRUwHaE7?w=287&h=191&c=7&r=0&o=5&pid=1.7",
     ]
-        self.n = len(self.urls) # the number of files
+        self.downloaded = 0 # num of downloaded files 
 
     """
     Function conduct downloading one file.
@@ -47,38 +51,42 @@ class ImgDownloader():
     def download(self, url, path):
         # 1. get response
         response = requests.get(url, stream=True)
+        if response.status_code != 200: # bad response will be discarded
+            return
         # 2. open the file and write the chunks
         with open(path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=50):
-                print("+", end="")  # process display
+            for chunk in response.iter_content(chunk_size=100):
                 file.write(chunk)  # write file
-            print(f"\n{path} download completed.")
+            print(f"{path} download completed.")
+        self.count += 1 # update count
 
     """
     Function record time of normal downloading.
     """
     def downLoadWithTimer(self):
+        self.count = 0 # reset count
         # 1. start timer
         start = perf_counter()
         # 2. execute download
-        for i in range(self.n):
+        for i in range(len(self.urls)):
             path = f"{self.folder}/{i+1}.{self.format}"
             url = self.urls[i]
             self.download(url, path)
         # 3. end timer and calculate elapse
         end = perf_counter()
-        elapse = end - start
-        print(f"{self.n} images downloaded in {elapse} seconds.")
+        elapse = round(end - start, 2)
+        print(f"{self.count} images downloaded in {elapse} seconds, {len(self.urls)-self.count} files failed to download.")
 
     """
     Function record time of threaded downloading.
     """
     def threadingDownloadWithTimer(self):
+        self.count = 0 # reset count
         threads = []  # create a list for threads
         # 1. start timer
         start = perf_counter()
         # 2. execute threading download
-        for i in range(self.n):  # add threads to the list
+        for i in range(len(self.urls)):  # add threads to the list
             path = f"{self.folder}/{i+1}.{self.format}"
             url = self.urls[i]
             t = Thread(target=self.download, args=(url, path))
@@ -88,8 +96,8 @@ class ImgDownloader():
             t.join()
         # 3. end timer and calculate elapse
         end = perf_counter()
-        elapse = end - start
-        print(f"{self.n} images downloaded in {elapse} seconds.")
+        elapse = round(end - start, 2)
+        print(f"{self.count} images downloaded in {elapse} seconds, {len(self.urls)-self.count} files failed to download.")
 
     """
     Argument Parsing
@@ -112,7 +120,7 @@ class ImgDownloader():
         # Set the folder attribute based on the parsed arguments
         if args.folder:
             self.folder = args.folder
-        if not os.path.exists(self.folder): # in case the folder not found
+        if not os.path.exists(self.folder): # in case the folder is not found
             os.makedirs(self.folder)
         # Invoke the appropriate method based on the selected mode
         if args.mode == 's':
@@ -122,5 +130,5 @@ class ImgDownloader():
 
 if __name__ == "__main__":
     # run the application
-    downloader = ImgDownloader()
+    downloader = FilesDownloader()
     downloader.run()
