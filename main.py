@@ -1,21 +1,24 @@
 import requests
-from time import perf_counter, sleep
+from time import perf_counter
 import argparse
 from threading import Thread
 import os   
 # os ONLY ensure images/ exists in your folder.
 
+'''Function conduct downloading a file to a path.'''
 def download(url, path):
     # 1. get response
     response = requests.get(url, stream=True)
     # 2. open the file and write the chunks
-    with open(path, 'wb') as img:
+    with open(path, 'wb') as file:
         for chunk in response.iter_content(chunk_size=50):
             print('+', end='')  # process display
-            img.write(chunk)    # write file
+            file.write(chunk)    # write file
         print(f'\n{path} download completed.')
 
-def elapse_normal():
+
+'''Function record time of normal downloading.'''
+def downLoadWithTimer():
     # 1. start timer
     start = perf_counter()
     # 2. execute download
@@ -28,28 +31,27 @@ def elapse_normal():
     elapse = end - start
     print(f'{len(urls)} images downloaded in {elapse} seconds.')
 
-def elapse_concurrent():
-    # 1. prepare threads
+'''Function record time of multi-thread downloading.'''
+def threadingDownloadWithTimer():
     threads = [] # create a list for threads
+    # 1. start timer
+    start = perf_counter()
+    # 2. execute threading download
     for i in range(len(urls)): # add threads to the list
         path = f'{IMG_FOLDER}/{i+1}.{FORMAT}'
         url = urls[i]
         t = Thread(target=download,
                    args=(url, path))
+        t.start() # start current thread
         threads.append(t)
-    # 2. start timer
-    start = perf_counter()
-    # 3.. execute threading download
-    for t in threads:
-        t.start() # start threads
-    for t in threads:
-        t.join() # wait for completing
-    # 4. end timer and calculate elapse
+    for t in threads: # wait for completing download
+        t.join() 
+    # 3. end timer and calculate elapse
     end = perf_counter()
     elapse = end - start
-    print(f'All downloaded in {elapse} seconds.')
+    print(f'{len(urls)} images downloaded in {elapse} seconds.')
 
-# variables
+'''Variables'''
 IMG_FOLDER = 'images'
 FORMAT = 'jpg'
 urls = [
@@ -80,11 +82,10 @@ urls = [
 'https://th.bing.com/th/id/OIP.HCpPn-IRV8SVidBlRoBRUwHaE7?w=287&h=191&c=7&r=0&o=5&pid=1.7'
 ]
 
-
 if __name__=='__main__':
     # Ensure folder exists
     if not os.path.exists(IMG_FOLDER):
         os.makedirs(IMG_FOLDER)
     # Execute elapse functions
-    elapse_normal()
-    elapse_concurrent()
+    downLoadWithTimer()
+    threadingDownloadWithTimer()
