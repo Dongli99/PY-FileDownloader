@@ -1,17 +1,11 @@
 import requests
-import time
+from time import perf_counter, sleep
 import argparse
 import threading
 import os   
-# os library only for making image/ folder in case there 
-# is no such folder in Professors computer.
+# os ONLY ensure images/ exists in your folder.
 
 def download(url, path):
-    # Ensure folder exists
-    folder = os.path.dirname(path)
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
     # 1. get response
     response = requests.get(url, stream=True)
     # 2. open the file and write the chunks
@@ -21,7 +15,29 @@ def download(url, path):
             img.write(chunk)    # write file
         print(f'\n{path} download completed.')
 
-IMG_FOLDER = 'images/'
+def elapse_normal():
+    # 1. start timer
+    start = perf_counter()
+    # 2. execute download
+    for i in range(len(urls)):
+        path = f'{IMG_FOLDER}/{i+1}.{FORMAT}'
+        download(urls[i], path)
+    # 3. end timer and calculate elapse
+    end = perf_counter()
+    elapse = end - start
+    print(f'{len(urls)} images downloaded in {elapse} seconds.')
+
+def elapse_concurrent():
+    # start timer
+    start = perf_counter()
+    download()
+    # end timer and calculate elapse
+    end = perf_counter()
+    elapse = end - start
+    print(f'All downloaded in {elapse} seconds.')
+
+IMG_FOLDER = 'images'
+FORMAT = 'jpg'
 urls = [
 'https://th.bing.com/th/id/OIP.z-dkECmUFma29zYrb27JkwAAAA?w=264&h=180&c=7&r=0&o=5&pid=1.7',
 'https://th.bing.com/th/id/OIP.MhwSzfXnBG1MpuuA6IFi-AAAAA?w=218&h=180&c=7&r=0&o=5&pid=1.7',
@@ -52,4 +68,7 @@ urls = [
 
 
 if __name__=='__main__':
-    download(url=urls[0], path='images/0.jpg')
+    # Ensure folder exists
+    if not os.path.exists(IMG_FOLDER):
+        os.makedirs(IMG_FOLDER)
+    elapse_normal()
